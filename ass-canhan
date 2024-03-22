@@ -1,134 +1,182 @@
 #include <stdio.h>
-#include <stdlib.h>
+void cls(){
+	system("@cls||clear");
+} 
+typedef struct {
+  char name[50];
+  float price;
+} IceCream;
 
-// Function prototypes
-int createFile();
-int AddValueToFile();
-int ReadValueFromFile();
-int RemoveFile();
+typedef struct {
+  int id;
+  char name[50];
+  IceCream order[10]; // Array to hold ordered ice cream items (max 10)
+  int numItems; // Number of items ordered by the customer
+} Customer;
 
-int main(int argc, char *argv[]) {
-    char c[1000];
-    char fileName[100];
-    int result;
-    int menu_option;
-    printf("        FILE INTERACTION!!!\n");
-    printf("------------------------------------------\n\n");
+// Function to add ice cream flavors and prices
+void addIceCream(IceCream* iceCreams, int* numIceCreams) {
+  if (*numIceCreams >= 10) {
+    printf("Maximum ice cream flavors reached.\n");
+    return;
+  }
 
-    do {
-        printf("\nMain Menu\n");
-        printf("1. Create a file.\n");
-        printf("2. Add value into a file.\n");
-        printf("3. Read data from file.\n");
-        printf("4. Delete file\n");
-        printf("5. Save and quit.\n");
-        printf(" Please enter an option from the main menu: ");
-        scanf("%d",&menu_option);
+  printf("Enter ice cream name: ");
+  getchar();
+  gets(iceCreams[*numIceCreams].name);
+  printf("Enter price: ");
+  scanf("%f", &iceCreams[*numIceCreams].price);
 
-        switch(menu_option) {
-            case 1:
-                result = createFile();
-                break;
-            case 2:
-                result = AddValueToFile();
-                break;
-            case 3:
-                result = ReadValueFromFile();
-                break;
-            case 4:
-                result = RemoveFile();
-                break;
-            case 5:
-                printf("Option exit\n");
-                break;
-            default:
-                printf("Error\n");
+  (*numIceCreams)++;
+}
+
+// Function to add customer details
+void addCustomer(Customer* customers, int* numCustomers) {
+  if (*numCustomers >= 10) {
+    printf("Maximum customer capacity reached.\n");
+    return;
+  }
+
+  printf("Enter customer ID: ");
+  scanf("%d", &customers[*numCustomers].id);
+  printf("Enter customer name: ");
+  getchar();
+  gets(customers[*numCustomers].name);
+
+  customers[*numCustomers].numItems = 0; // Initialize ordered items to 0
+
+  (*numCustomers)++;
+}
+int orderQuantities[10];// Separate array to store order quantities (max 10)
+// Function to take customer order
+void takeOrder(Customer* customer, IceCream* iceCreams, int numIceCreams) {
+  int choice, quantity;
+ 
+
+	int i;
+  printf("Customer: %s (ID: %d)\n", customer->name, customer->id);
+  printf("Available Ice Creams:\n");
+
+  for ( i = 0; i < numIceCreams; i++) {
+    printf("%d. %s (%.0fVND)\n", i + 1, iceCreams[i].name, iceCreams[i].price);
+  }
+
+  do {
+    printf("Enter ice cream number (0 to finish): ");
+    scanf("%d", &choice);
+
+    if (choice > 0 && choice <= numIceCreams) {
+      printf("Enter quantity: ");
+      scanf("%d", &quantity);
+
+      if (quantity > 0) {
+      	customer->order[customer->numItems] = iceCreams[choice - 1];
+        orderQuantities[customer->numItems] = quantity; // Store quantity in separate array
+        customer->numItems++;
+      } else {
+        printf("Invalid quantity.\n");
+      }
+    } else if (choice != 0) {
+      printf("Invalid ice cream number.\n");
+    }
+  } while (choice != 0);
+}
+
+// Function to generate invoice
+void generateInvoice(Customer customer, int orderQuantities[]) {
+  printf("\n\t\t  Ice Cream Shop\n");
+  printf("\t\t\t  Invoice\n\n");
+  printf("Customer ID: %d\n", customer.id);
+  printf("Customer Name: %s\n\n", customer.name);
+  int i;
+  printf("Ordered Items:\n");
+  printf("  %-20s  %-10s  %-10s\n", "Name", "Quantity", "Price");
+  float totalCost = 0;
+  for (i = 0; i < customer.numItems; i++) {
+    IceCream item = customer.order[i];
+    printf("  %-20s  %d  %10.0fVND\n", item.name, orderQuantities[i], item.price); // Assuming quantity 1 for simplicity
+    totalCost += item.price * orderQuantities[i]; // Calculate total cost with quantity
+  }
+  printf("\nTotal Cost: %.0fVND\n", totalCost);
+}
+
+int main() {
+  IceCream iceCreams[10];
+  int numIceCreams = 0;
+  Customer customers[10];
+  int numCustomers = 0;
+  Customer* customer;
+  int choice;
+  
+  do {
+    printf("\nIce Cream Shop Menu:\n");
+    printf("1. Add Ice Cream Flavor\n");
+    printf("2. Add Customer\n");
+    printf("3. Take Order\n");
+    printf("4. Generate Invoice\n");
+    printf("5. Exit\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+    switch (choice) {
+    	case 1:
+    		cls();
+    		addIceCream(iceCreams, &numIceCreams);
+    		break;
+		case 2:
+			cls();
+			addCustomer(customers,&numCustomers);
+			 break;
+		case 3:
+			cls();
+			if (numCustomers > 0) {
+      int customerIndex,i;
+      printf("Select customer (enter ID): ");
+      scanf("%d", &customerIndex);
+
+      // Find the customer by ID (assuming unique IDs)
+      Customer* selectedCustomer = NULL;
+      for ( i = 0; i < numCustomers; i++) {
+        if (customers[i].id == customerIndex) {
+          selectedCustomer = &customers[i];
+          break;
         }
-    } while (menu_option != 5);
+      }
 
-    return 0;
-}
-
-// create file func
-int createFile() {
-    FILE *file;
-    char fileName[100];
-    printf("Enter a fileName: ");
-    scanf("%s", fileName);
-    if ((file = fopen(fileName, "w")) == NULL) {
-        printf("Cannot create a file\n");
-        return 0;
-    }
-    printf("Create file successfully\n");
-    printf("----------------------------\n");
-    fclose(file);
-    return 1;
-}
-
-// write to file func
-int AddValueToFile() {
-    FILE *file;
-    char fileName[100];
-    char content[100];
-    printf("Enter a fileName: ");
-    scanf("%s", fileName);
-    if ((file = fopen(fileName, "a")) == NULL) {
-        printf("Cannot open %s file to write\n", fileName);
-        return 0;
+      if (selectedCustomer != NULL) {
+        takeOrder(selectedCustomer, iceCreams, numIceCreams);
+      } else {
+        printf("Customer not found.\n");
+      }
     } else {
-        printf("Enter content to append to the file:\n");
-        scanf(" %[^\n]", content);
-
-        // Write content to the file
-        fprintf(file, "%s\n", content);
+      printf("No customers added yet. Please add a customer first.\n");
     }
-    fclose(file);
-    printf("Add value into file successfully\n");
-    printf("----------------------------\n");
+    	break;
+    case 4:
+    	cls();
+    	if (numCustomers > 0) {
+      int customerIndex,i;
+      printf("Select customer (enter ID): ");
+      scanf("%d", &customerIndex);
 
-    return 1;
-}
-
-// read file func
-int ReadValueFromFile() {
-    FILE *file;
-    char fileName[100];
-    char line[100];
-
-    printf("Enter a fileName: ");
-    scanf("%s", fileName);
-    if ((file = fopen(fileName, "r")) == NULL) {
-        printf("Cannot open %s file for reading\n", fileName);
-        return 0;
-    } else {
-        printf("\n----------------------------------\n");
-        printf("Contents of the file %s:\n", fileName);
-        while (fgets(line, sizeof(line), file) != NULL) {
-            printf("%s", line);
+      // Find the customer by ID (assuming unique IDs)
+      Customer* selectedCustomer = NULL;
+      for ( i = 0; i < numCustomers; i++) {
+        if (customers[i].id == customerIndex) {
+          selectedCustomer = &customers[i];
+          break;
         }
-        printf("\n----------------------------------\n");
-    }
-    fclose(file);
-    printf("Read value from %s file successfully\n", fileName);
-    printf("----------------------------\n");
+      }
 
-    return 1;
-}
-
-// delete file func
-int RemoveFile() {
-    char fileName[100];
-
-    printf("Enter a fileName: ");
-    scanf("%s", fileName);
-    printf("\n----------------------------------\n");
-    if (remove(fileName) == 0) {
-        printf("File %s removed successfully.\n", fileName);
-    } else {
-        printf("Unable to remove the file %s.\n", fileName);
-        return 0;
-    }
-    printf("\n----------------------------------\n");
-    printf("----------------------------\n");
-    return 1;
+      if (selectedCustomer != NULL) {
+        generateInvoice(*selectedCustomer, orderQuantities); // Pass by value
+      } else {
+        printf("Customer not found.\n");
+      }
+    } else 
+      printf("No customers added yet. Please add a customer first.\n");
+    
+    break; 
+		}
+	}
+	while(choice!=5);
 }
